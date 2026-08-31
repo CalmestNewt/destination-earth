@@ -208,14 +208,8 @@ h1{
 .plate button:hover{background:rgba(255,255,255,.18);border-color:#F0A45C}
 
 /* ---------- footer ----------------------------------------------------- */
-.foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.acts{display:flex;gap:8px}
-#thrust{
-  background:var(--accent);border-color:var(--accent);color:#FFF4EC;
-  padding:9px 20px;
-}
-#thrust:hover{filter:brightness(1.08);border-color:var(--accent)}
-.hint{font-size:11.5px;color:var(--dim);margin:0;line-height:1.5}
+.foot{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.hint{font-size:11.5px;color:var(--dim);margin:0;line-height:1.5;text-align:center}
 .hint kbd{
   font-family:"Martian Mono",monospace;font-size:9px;
   padding:2px 5px;border-radius:3px;
@@ -246,18 +240,12 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .sub{font-size:8px}
   .gauge{min-width:60px;padding:4px 7px 5px}
   .gauge .v{font-size:14px}
-  /* controls sit directly under the canyon, where a thumb already is */
-  .foot{flex-direction:column-reverse;align-items:stretch;gap:9px}
-  .acts{width:100%}
-  #restart{flex:0 0 36%}
-  #thrust{flex:1}
-  .hint{text-align:center;font-size:11px}
+  .hint{font-size:11px}
   .note{font-size:11px}
 }
 /* fingers need a bigger target than a mouse pointer does */
 @media (pointer:coarse){
   button{padding:13px 16px;font-size:10.5px}
-  #thrust{padding:15px 22px}
 }
 
 @media (prefers-reduced-motion:reduce){
@@ -316,11 +304,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   </div>
 
   <div class="foot">
-    <p class="hint"><kbd>Space</kbd> <kbd>&uarr;</kbd> <kbd>W</kbd> or click &middot; thrust</p>
-    <div class="acts">
-      <button id="restart">Restart</button>
-      <button id="thrust">Thrust</button>
-    </div>
+    <p class="hint"><kbd>Space</kbd> <kbd>&uarr;</kbd> <kbd>W</kbd> or tap the canyon &middot; thrust</p>
   </div>
 
   <p class="note"><b>Why the sky looks wrong.</b> Mars reverses our sunsets. Fine dust scatters red light forward through the whole sky and lets blue through only close to the sun, so the horizon burns butterscotch while the sun sits in a cold blue halo. That is the real colour, not artistic licence.</p>
@@ -1027,7 +1011,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     var inCanyon = t && t.closest && t.closest("#viewport");
     if (!inCanyon){
       // a finger outside the canyon is scrolling the page, not flying —
-      // only the canyon and the thrust button take touch input
+      // only the canyon takes touch input
       if (e.pointerType === "touch") return;
       if (now() - lastTouchAt < 700) return;   // the click that trails a tap
     }
@@ -1050,14 +1034,8 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     else if ((e.key === "Enter" || e.code === "Enter") && mode === "dead"){ e.preventDefault(); reset(); }
   }, { passive:false });
 
-  document.getElementById("restart").addEventListener("click", function(){
-    reset(); viewport.focus();
-  });
   document.getElementById("flyAgain").addEventListener("click", function(e){
     e.stopPropagation(); reset(); viewport.focus();
-  });
-  document.getElementById("thrust").addEventListener("click", function(e){
-    e.stopPropagation(); flap(); viewport.focus();
   });
 
   buildSky();
