@@ -227,11 +227,6 @@ button:hover{background:var(--btn-hover);border-color:var(--accent)}
 button:active{transform:translateY(1px)}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-.note{
-  border-top:1px solid var(--rule);padding-top:11px;margin:0;
-  font-size:11.5px;line-height:1.6;color:var(--dim);
-}
-.note b{color:var(--fg);font-weight:600}
 
 /* ---------- phones ------------------------------------------------------ */
 @media (max-width:460px){
@@ -241,7 +236,6 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .gauge{min-width:60px;padding:4px 7px 5px}
   .gauge .v{font-size:14px}
   .hint{font-size:11px}
-  .note{font-size:11px}
 }
 /* fingers need a bigger target than a mouse pointer does */
 @media (pointer:coarse){
@@ -306,8 +300,6 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   <div class="foot">
     <p class="hint"><kbd>Space</kbd> <kbd>&uarr;</kbd> <kbd>W</kbd> or tap the canyon &middot; thrust</p>
   </div>
-
-  <p class="note"><b>Why the sky looks wrong.</b> Mars reverses our sunsets. Fine dust scatters red light forward through the whole sky and lets blue through only close to the sun, so the horizon burns butterscotch while the sun sits in a cold blue halo. That is the real colour, not artistic licence.</p>
 
   <p class="sr" aria-live="polite" id="live"></p>
 </div>
@@ -1001,13 +993,13 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   viewport.addEventListener("touchstart", tap, { passive:false });
 
   // the whole page thrusts, so a stray tap beside the viewport still flies the
-  // saucer — buttons and selectable prose keep their own behaviour
+  // saucer — buttons keep their own behaviour
   var lastTouchAt = 0;
   document.addEventListener("touchstart", function(){ lastTouchAt = now(); }, { passive:true });
 
   function pageTap(e){
     var t = e.target;
-    if (t && t.closest && (t.closest("button") || t.closest(".note"))) return;
+    if (t && t.closest && t.closest("button")) return;
     var inCanyon = t && t.closest && t.closest("#viewport");
     if (!inCanyon){
       // a finger outside the canyon is scrolling the page, not flying —
