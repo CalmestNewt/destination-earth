@@ -55,18 +55,42 @@ last gates at full intensity.
 
 Run with `node`. No dependencies.
 
-- `tests/physics-test.js` — thrust size, pacing, gap geometry, losability
+- `tests/constants.js` — reads the difficulty knobs back out of `index.html`
+  and exports them, along with the ramp curves
+- `tests/physics-test.js` — thrust size, pacing, gap geometry, losability, and
+  that `DELTA` never demands a climb the saucer cannot make in the time it has
 - `tests/fairness-planner.js` — a lookahead planner that proves the goal is
   actually reachable; this is what caught levels demanding an impossible
   altitude swing between gates
 - `tests/difficulty-tuning.js` — compares configs using two bots, a casual
   bang-bang controller and the planner, and reports completion rates
 
-Note the test files carry their own copies of the constants; change a value in
-the HTML and update the tests to match.
+The tests read the constants from `index.html` at run time rather than keeping
+copies, so changing a knob in the HTML changes what the tests grade and a stale
+test is not possible. They previously did keep copies, and spent the pixel-art
+rewrite quietly grading the old 380x540 vector build while reporting all green.
+
+`difficulty-tuning.js` also carries a stored `tighter` candidate to compare
+against. That one is a plain literal and is deliberately not live.
+
+## Verified in a real browser
+
+Touch and pointer input are confirmed in Chrome: a tap starts the run, flies
+the saucer, and relaunches from the crash card, and one physical tap produces
+exactly one thrust. That last part needed fixing: one tap arrives as
+pointerdown, touchstart, mousedown and click, and `preventDefault` has to run
+even for the duplicates. Letting the dedupe return early skipped it, so
+touchstart still emitted its compatibility mousedown and click when the finger
+lifted — well outside the dedupe window — and every tap thrust twice.
+
+The keyboard handler answers to Space, W, Up, the legacy `Spacebar`/`Up` key
+names, and correctly ignores modifier combos like cmd+Space. That was checked
+by dispatching the events, not by typing: the automation harness delivers no
+keydown to the page at all, so real hardware keys remain unconfirmed.
 
 ## Known unverified
 
-Live input (tap/keyboard) and the ending cinematic past its opening fade were
-never confirmed in a real browser — the automation harness available at build
-time throttled the tab and swallowed synthetic input. Worth a manual check.
+- The ending cinematic past its opening fade.
+- The `max-width:460px` layout at a true phone width. Chrome would not shrink
+  its window far enough to trigger it, so it has only been reasoned about.
+  Easiest check is DevTools device emulation, or just opening it on a phone.
