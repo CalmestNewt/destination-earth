@@ -83,6 +83,11 @@ even for the duplicates. Letting the dedupe return early skipped it, so
 touchstart still emitted its compatibility mousedown and click when the finger
 lifted — well outside the dedupe window — and every tap thrust twice.
 
+That `preventDefault` has to skip taps landing on a button. The end card's Fly
+again sits inside the canyon, so the viewport's tap handler sees its taps too,
+and suppressing their default kills the compatibility click the button waits
+for. Since the ending ignores thrust, that left a finger no way out of it.
+
 The keyboard handler answers to Space, W, Up, the legacy `Spacebar`/`Up` key
 names, and correctly ignores modifier combos like cmd+Space. That was checked
 by dispatching the events, not by typing: the automation harness delivers no

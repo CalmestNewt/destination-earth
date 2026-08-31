@@ -980,6 +980,12 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   // leaving it to the early return gave every tap on a phone a second thrust.
   var lastTap = 0;
   function tap(e){
+    // the end card's Fly again button sits inside the canyon, so this handler
+    // sees its taps too. Leave them alone: preventDefault here would suppress
+    // the compatibility click the button's own listener waits for, and a
+    // finger would have no way out of the ending.
+    var target = e && e.target;
+    if (target && target.closest && target.closest("button")) return;
     if (e && e.cancelable) e.preventDefault();
     var t = now();
     if (t - lastTap < 30) return;   // pointerdown and touchstart share an instant
