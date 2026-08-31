@@ -42,6 +42,9 @@
 
 body{
   margin:0;
+  /* pan and pinch-zoom still work; only the double-tap zoom goes, which a
+     rapid tapper outside the canyon would otherwise trigger by accident */
+  touch-action:manipulation;
   background:var(--bg);
   color:var(--fg);
   font-family:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -994,13 +997,17 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   });
 
   /* ---- input --------------------------------------------------------------- */
-  // one physical tap can arrive as pointerdown + mousedown + click, so dedupe
+  // one physical tap can arrive as pointerdown + mousedown + click, so dedupe.
+  // preventDefault has to run even for the duplicates: suppressing touchstart's
+  // default is what stops the browser emitting the compatibility mousedown and
+  // click when the finger lifts, and those land long after the dedupe window —
+  // leaving it to the early return gave every tap on a phone a second thrust.
   var lastTap = 0;
   function tap(e){
-    var t = now();
-    if (t - lastTap < 60) return;
-    lastTap = t;
     if (e && e.cancelable) e.preventDefault();
+    var t = now();
+    if (t - lastTap < 30) return;   // pointerdown and touchstart share an instant
+    lastTap = t;
     viewport.focus();
     flap();
   }
