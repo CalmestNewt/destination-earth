@@ -792,11 +792,49 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   var LAND = ["#2E7A46","#3E9455","#245F38"];
   var SEA  = ["#1B4880","#2664A8","#12345E"];
   var ICE  = "#E4F2F8", CLOUD = "#DCE9F4", ATMO = "#7FC4EE";
-  var CONT = [
-    [-0.06,-0.16,0.26,0.20],[ 0.04, 0.24,0.19,0.30],
-    [-0.56,-0.28,0.21,0.17],[-0.44, 0.36,0.13,0.22],
-    [ 0.46,-0.22,0.29,0.19],[ 0.40, 0.46,0.13,0.10]
+  // Earth's landmasses as an equirectangular mask, hand-authored the way the
+  // saucer sprite is: 64 columns of longitude from -180, 32 rows of latitude
+  // from +90. Sampled per pixel by lat/lon, so the sphere carries real
+  // coastlines instead of blobs.
+  var LANDMASK = [
+    "................................................................",
+    "........................#####...................................",
+    "......................#######..................############.....",
+    ".....################.#######....###############################",
+    "...###################.###.......###############################",
+    "....###################..........############################...",
+    "........###############........###########################......",
+    ".........##############........############################.....",
+    "..........###########..........###########################......",
+    "..........##########..........############################......",
+    "...........########...........#########################.........",
+    "............####.............#########################..........",
+    ".............#####...........########################...........",
+    "...............###...........#######################............",
+    "..................#####.......###########..#########............",
+    "..................######........#########........#######........",
+    "..................########........######..........##########....",
+    "..................#########.......######...........#########....",
+    "...................#######........########............#####.....",
+    "...................#######........#####.##..........#######.....",
+    "...................#####...........####.............########....",
+    "...................#####...........###..............########....",
+    "...................####................................####....#",
+    "...................###....................................#...##",
+    "...................##...........................................",
+    "................................................................",
+    "................................................................",
+    "################################################################",
+    "################################################################",
+    "################################################################",
+    "################################################################",
+    "################################################################",
   ];
+
+  // longitude facing the viewer: the Atlantic, so the Americas sit left of
+  // centre and Africa and Europe right of it
+  var LON0 = -40;
+  var MASK_W = 64, MASK_H = 32;
 
   function buildEarth(){
     var D = ER * 2 + 2;
@@ -813,12 +851,13 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         var lam = (-0.48 * nx) + (-0.46 * ny) + (0.74 * nz);
         lam = Math.max(0, Math.min(1, (lam + 0.15) / 1.05));
 
-        var land = false;
-        for (var i = 0; i < CONT.length; i++){
-          var k = CONT[i];
-          var ax = (nx - k[0]) / k[2], ay = (ny - k[1]) / k[3];
-          if (ax * ax + ay * ay < 1){ land = true; break; }
-        }
+        // unproject the disc back onto the globe, then read the mask
+        var lat = Math.asin(Math.max(-1, Math.min(1, -ny))) * 180 / Math.PI;
+        var lon = LON0 + Math.atan2(nx, nz) * 180 / Math.PI;
+        var mr = Math.floor((90 - lat) / 180 * MASK_H);
+        if (mr < 0) mr = 0; else if (mr >= MASK_H) mr = MASK_H - 1;
+        var mc = Math.floor((((lon + 180) % 360) + 360) % 360 / 360 * MASK_W);
+        var land = LANDMASK[mr].charCodeAt(mc) === 35;   // '#'
 
         var pal = land ? LAND : SEA;
         var band = lam > 0.62 ? 1 : lam > 0.3 ? 0 : 2;
@@ -826,10 +865,17 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         // dither the terminator so the shading reads as pixel art
         if (band !== 2 && lam < 0.42 && lam > 0.3 && thresh(x, y) > 0.5) col = pal[2];
 
-        if (Math.abs(ny) > 0.80) col = lam > 0.25 ? ICE : SEA[2];
+        // ice by latitude, not by how near the pixel sits to the disc edge:
+        // the old test whitened everything above 53 degrees, Canada included
+        // -60 matches where Antarctica starts in the mask; a looser bound left
+        // a sliver of polar land between the two and drew it green
+        if (lat > 72 || lat < -60) col = lam > 0.25 ? ICE : SEA[2];
         // a couple of cloud bands, stippled
-        var cl = Math.sin(nx * 4.2 + ny * 2.1) * Math.cos(ny * 5.3 - 0.7);
-        if (cl > 0.42 && lam > 0.22 && thresh(x + 2, y) < 0.62) col = CLOUD;
+        // two frequencies, so the weather breaks into drifts instead of the
+        // two fat lozenges a single sine draws
+        var cl = Math.sin(nx * 5.7 + ny * 2.4) * Math.cos(ny * 6.9 - 0.7)
+               + 0.6 * Math.sin(nx * 11.3 - ny * 7.1 + 2.0);
+        if (cl > 0.74 && lam > 0.22 && thresh(x + 2, y) < 0.5) col = CLOUD;
 
         px(g, x, y, col);
         if (d2 > 0.90 && lam > 0.2 && thresh(x, y) < 0.5) px(g, x, y, ATMO);
